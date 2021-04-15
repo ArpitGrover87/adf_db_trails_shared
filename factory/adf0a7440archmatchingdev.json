@@ -1,0 +1,9 @@
+{
+	"name": "<adf>",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "<principalId>",
+		"tenantId": "<tenantId>"
+	}
+}

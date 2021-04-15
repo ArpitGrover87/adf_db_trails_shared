@@ -1,0 +1,191 @@
+{
+	"name": "Datafactory_datbricks_trails",
+	"properties": {
+		"description": "A simple data pipeline feature orchestration through data factory, copying files to and from storage local, storing rawa data as well as delta data",
+		"activities": [
+			{
+				"name": "copy_file_to_source",
+				"description": "",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "load_sample_data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "source/input/"
+					},
+					{
+						"name": "Destination",
+						"value": "sink/staged_data/"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "input",
+							"wildcardFileName": "*.csv"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"dataIntegrationUnits": 0
+				},
+				"inputs": [
+					{
+						"referenceName": "SourceFilesDataset",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DestinationFilesDataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": "coviddata_us",
+							"FileExtension": ".csv"
+						}
+					}
+				]
+			},
+			{
+				"name": "apply_transformation",
+				"description": "",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "copy_file_to_source",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/arpit.grover.eu@rabobank.com/test/apply_transformation",
+					"baseParameters": {
+						"input": {
+							"value": "@pipeline().parameters.inputPath",
+							"type": "Expression"
+						},
+						"output": {
+							"value": "@pipeline().parameters.outputPath",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.fileName",
+							"type": "Expression"
+						},
+						"pipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"targetContainer": {
+							"value": "@pipeline().parameters.targetContainer",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks_default",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "load_sample_data",
+				"description": "Databricks Notebook activity does the processing of the data copied in the previous step (copy activity).  Please ensure you have added the databricks notebook (<a href='https://adflabstaging1.blob.core.windows.net/share/Transformations.html' target='_blank'>https://adflabstaging1.blob.core.windows.net/share/Transformations.html</a>) in the databricks work-space and referenced it in the notebook activity in ADF.",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/arpit.grover.eu@rabobank.com/test/load_sample_data",
+					"baseParameters": {
+						"input": {
+							"value": "@pipeline().parameters.inputPath",
+							"type": "Expression"
+						},
+						"output": {
+							"value": "@pipeline().parameters.outputPath",
+							"type": "Expression"
+						},
+						"filename": {
+							"value": "@pipeline().parameters.fileName",
+							"type": "Expression"
+						},
+						"pipelineRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks_default",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"inputPath": {
+				"type": "string",
+				"defaultValue": "/staged_data"
+			},
+			"outputPath": {
+				"type": "string",
+				"defaultValue": "/processed_data"
+			},
+			"fileName": {
+				"type": "string",
+				"defaultValue": "coviddata_us.csv"
+			},
+			"targetContainer": {
+				"type": "string",
+				"defaultValue": "sink"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-04-14T09:45:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

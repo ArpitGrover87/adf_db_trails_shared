@@ -1,0 +1,38 @@
+{
+	"name": "DestinationFilesDataset",
+	"properties": {
+		"description": "Connection to your destination Azure Blob Store.",
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_default",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "coviddata_us"
+			},
+			"FileExtension": {
+				"type": "string",
+				"defaultValue": ".csv"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@concat(dataset().FileName, dataset().FileExtension)",
+					"type": "Expression"
+				},
+				"folderPath": "staged_data",
+				"container": "sink"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
