@@ -1,4 +1,6 @@
 # Databricks notebook source
+storageName = dbutils.secrets.get(scope="test",key="storageName")
+accessKey = dbutils.secrets.get(scope="test",key="accesskey")
 try:
   dbutils.fs.mount(
     source = "wasbs://source@"+storageName+".blob.core.windows.net",
